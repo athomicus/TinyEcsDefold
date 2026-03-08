@@ -1,0 +1,62 @@
+local tiny = require("tinyecs.tiny")
+local SCREEN_W = 960
+local SCREEN_H = 640
+local COUNT = 512
+-- =====================
+-- SYSTEMY
+-- =====================
+-- System ruchu: przesuwa encje i odbija od krawędzi ekranu
+local moveSystem = tiny.processingSystem ()
+moveSystem.filter = tiny.requireAll("position", "velocity")
+function moveSystem :process(e, dt)
+	e.position.x = e.position.x + e.velocity.x * dt
+	e.position.y = e.position.y + e.velocity.y * dt
+	if e.position.x < 0 or e.position.x > SCREEN_W then
+		e.velocity.x = -e.velocity.x
+		e.position.x = math.max(0, math.min(e.position.x, SCREEN_W))
+	end
+
+	if e.position.y < 0 or e.position.y > SCREEN_H then
+		e.velocity.y = -e.velocity.y
+		e.position.y = math.max(0, math.min(e.position.y, SCREEN_H))
+	end
+end
+-- System renderowania: synchronizuje pozycję encji ECS z pozycją gam e objecta
+local renderSystem = tiny.processingSystem ()
+renderSystem .filter = tiny.requireAll("position", "go_id")
+function renderSystem :process(e, dt)
+	go.set_position(e.position, e.go_id)
+end
+-- =====================
+-- LIFECYCLE
+-- =====================
+local world
+function init(self)
+	math.randomseed(os.time())
+	world = tiny.world(moveSystem , renderSystem )
+	-- Spawning 300 encji
+	for i = 1, COUNT do
+		local x = math.random (0, SCREEN_W)
+		local y = math.random (0, SCREEN_H)
+		-- Tworzy instancję gam e objecta przez fabrykę
+		local go_id = factory.create("#factory", vmath.vector3(x, y, 0))
+		-- Encja ECS = zwykła tabela Lua z kom ponentam i
+		local entity = {
+			position = vmath.vector3(x, y, 0),
+			velocity = vmath.vector3(
+			math.random (-150, 150),
+			math.random (-150, 150),
+			0
+		),
+		go_id = go_id -- referencja do Defold gam e objecta
+	}
+	tiny.addEntity(world, entity)
+end
+end
+function update(self, dt)
+tiny.update(world, dt)
+end
+function final(self)
+-- Usuń wszystkie encje (gam e objecty zostaną usunięte przez Defold)
+tiny.clearEntities(world)
+end
