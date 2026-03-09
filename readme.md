@@ -141,10 +141,18 @@ Wymagania
 
     prototype.go musi zawierać komponent Sprite z przypisaną teksturą
 
+###############
 
+for i = 1, 3 do
+    local entity = { hp = math.random(30, 99) }
+    tiny.addEntity(world, entity)  -- world "łapie" wskaźnik
+end
+..
 entity_map = {}
 entity_map[go_id] = entity 
 tiny.addEntity(world, entity) --Dodajemy wygenerowaną encję do naszego świata TinyECS
+
+tiny.addEntity - "trzyma" wskaznik do entity ktory normalnie po wyjsciu z petli by zniknal ale wskaznik jest wiec dalej entity sa wpamieci
 
 PAMIĘĆ RAM
 ══════════════════════════════════════════════════════
